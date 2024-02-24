@@ -43,6 +43,7 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
         screen.blit(surface, (300, 100))
+        image = pygame.transform.scale(image, (width, height))
         screen.blit(image, (50, 50, 100, 100))
         pygame.display.update()
     pygame.quit()

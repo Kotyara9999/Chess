@@ -3,15 +3,15 @@ import sys
 from random import randint
 import string
 import pygame
+import Figures
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
-WHITE_CELL_COLOR = (230,206,172)
-BLACK_CELL_COLOR = (148,117,89)
-BOARD_COLOR = (88,57,29)
+WHITE_CELL_COLOR = (230, 206, 172)
+BLACK_CELL_COLOR = (148, 117, 89)
+BOARD_COLOR = (88, 57, 29)
 ENGLISH = list(string.ascii_uppercase)
-
 
 
 def load_image(name, colorkey=None):
@@ -42,12 +42,12 @@ class Board:
         self.corner = corner
 
     def render(self, screen):
-        #это рендер края доски
+        # это рендер края доски
         pygame.draw.rect(screen, BOARD_COLOR,
                          (self.left, self.top,
                           self.cell_size * self.size + self.edge * 2,
                           self.cell_size * self.size + self.edge * 2), self.edge)
-        #рендер букв и цифр
+        # рендер букв и цифр
         for i in range(self.size):
             number = FONT.render(str(i), True, WHITE)
             screen.blit(number, (self.left + (self.edge // 2 - FX // 2),
@@ -58,12 +58,13 @@ class Board:
             screen.blit(number, (i * self.cell_size + self.left + self.edge + (self.cell_size // 2 - FX // 2),
                                  self.top + (self.edge // 2 - FY // 2)))
 
-        #это рендер клеток
+        # это рендер клеток
         for x in range(self.size):
             for y in range(self.size):
                 if self.corner:
                     pygame.draw.rect(screen, (255, 255, 255),
-                                     (x * self.cell_size + self.left + self.edge, y * self.cell_size + self.top + self.edge,
+                                     (x * self.cell_size + self.left + self.edge,
+                                      y * self.cell_size + self.top + self.edge,
                                       self.cell_size, self.cell_size), 1)
                 if (x + y) % 2 == 0:
                     color = WHITE_CELL_COLOR
@@ -74,6 +75,7 @@ class Board:
                                   y * self.cell_size + self.top + self.edge, self.cell_size, self.cell_size), 0)
 
                 self.board[y][x].render(screen)
+        print()
 
     def update(self):
         counter = 0
@@ -85,21 +87,38 @@ class Board:
 
 
 class Cell:
-    def __init__(self, board, value, x, y):
-        self.val = value
+    def __init__(self, board, contain, x, y):
+        # self.val = value
         self.x = x
         self.y = y
+        self.cont = contain
+        self.board = board
         self.cell_size = board.cell_size
         self.left = board.left
         self.top = board.top
         self.edge = board.edge
 
     def render(self, screen):
-        if self.val != 0:
-            number = FONT.render(str(self.val), True, RED)
-            screen.blit(number, (self.x * self.cell_size + self.left + self.edge + (self.cell_size // 2 - FX // 2),
-                                 self.y * self.cell_size + self.top + self.edge + (self.cell_size // 2 - FY // 2)))
+        if self.cont != 0:
+            print(1)
+            image = load_image(self.cont.image)
+            image = pygame.transform.scale(image, (self.cell_size, self.cell_size))
+            screen.blit(image, (self.x * self.cell_size + self.left + self.edge,
+                                self.y * self.cell_size + self.top + self.edge))
 
+    def move(self, pos2):
+        success = self.cont.move(pos2)
+        print(success)
+        if success:
+            x, y = pos2[0], pos2[1]
+            self.board.board[y][x] = self.board.board[self.y][self.x]
+            self.cont = 0
+
+
+#        if self.val != 0:
+#            number = FONT.render(str(self.val), True, RED)
+#            screen.blit(number, (self.x * self.cell_size + self.left + self.edge + (self.cell_size // 2 - FX // 2),
+#                                 self.y * self.cell_size + self.top + self.edge + (self.cell_size // 2 - FY // 2)))
 
 if __name__ == "__main__":
     pygame.init()
@@ -109,19 +128,20 @@ if __name__ == "__main__":
     cell_size = 90
     left = 20
     top = 20
-    edge = max(FX,FY)
+    edge = max(FX, FY)
     screen = pygame.display.set_mode((size * cell_size + (left + edge) * 2,
                                       size * cell_size + (top + edge) * 2,))
     corner = False
     board = Board(size, cell_size, left, top, edge, corner)
     running = True
-    board.board[0][0].val = 1
+    board.board[0][0].cont = Figures.Pawn(board, (0, 0))
 
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                board.board[0][0].move((0, 1))
         screen.fill((0, 0, 0))
         board.render(screen)
         pygame.display.flip()
-
