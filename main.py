@@ -32,12 +32,6 @@ def load_image(name, colorkey=None):
     return image
 
 
-def put_on_cell(board, rule):
-    for x in range(board.size):
-        for y in range(board.size):
-            board.board[y][x].cont = rule.board[y][x]
-
-
 class Board:
     def __init__(self, x, cell_size, left, top, edge, corner=True):
         self.edge = edge
@@ -45,20 +39,31 @@ class Board:
         self.cell_size = cell_size
         self.left = left
         self.top = top
-        self.board = [[Cell(self, 0, x1, y1) for x1 in range(x)] for y1 in range(x)]
+        self.board = [[Figures.Empty(self, (x1, y1)) for x1 in range(x)] for y1 in range(x)]
         self.corner = corner
 
     def render_player_action(self, screen):
         for x in range(self.size):
             for y in range(self.size):
-                if self.board[y][x].cont != 0:
-                    if self.board[y][x].cont.grabbed:
-                        image = load_image(self.board[y][x].cont.image)
+                try:
+                    if self.board[y][x].grabbed:
+                        image = load_image(self.board[y][x].image)
                         image = pygame.transform.scale(image, (self.cell_size, self.cell_size))
                         mx, my = pygame.mouse.get_pos()
                         mx -= self.cell_size // 2
                         my -= self.cell_size // 2
                         screen.blit(image, (mx, my))
+                except AttributeError:
+                    print(x, y)
+
+    def render_figures(self, screen, pos):
+        x, y = pos
+        if self.board[y][x] != 0:
+            if not self.board[y][x].grabbed:
+                image = load_image(self.board[y][x].image)
+                image = pygame.transform.scale(image, (self.cell_size, self.cell_size))
+                screen.blit(image, (x * self.cell_size + self.left + self.edge,
+                                    y * self.cell_size + self.top + self.edge))
 
     def render(self, screen):
         # это рендер края доски
@@ -93,7 +98,7 @@ class Board:
                                  (x * self.cell_size + self.left + self.edge,
                                   y * self.cell_size + self.top + self.edge, self.cell_size, self.cell_size), 0)
 
-                self.board[y][x].render(screen)
+                self.render_figures(screen, (x, y))
         self.render_player_action(screen)
 
     def get_cell(self, x, y):
@@ -109,48 +114,6 @@ class Board:
                     counter += 1
         new = randint(0, counter)
 
-
-class Cell:
-    def __init__(self, board, contain, x, y):
-        # self.val = value
-        self.x = x
-        self.y = y
-        self.cont = contain
-        self.board = board
-        self.cell_size = board.cell_size
-        self.left = board.left
-        self.top = board.top
-        self.edge = board.edge
-
-    def render(self, screen):
-        if self.cont != 0 and not self.cont.grabbed:
-            image = load_image(self.cont.image)
-            image = pygame.transform.scale(image, (self.cell_size, self.cell_size))
-            screen.blit(image, (self.x * self.cell_size + self.left + self.edge,
-                                self.y * self.cell_size + self.top + self.edge))
-
-    def can_move(self, pos2):
-        if self.cont != 0:
-            if self.cont.can_move(pos2):
-                return True
-        return False
-
-    def move(self, pos2):
-        success = self.can_move(pos2)
-        if success:
-            self.cont.move(pos2)
-            x, y = pos2[0], pos2[1]
-            self.board.board[y][x].cont = self.cont
-            self.cont = 0
-            return success
-        else:
-            return success
-
-
-#        if self.val != 0:
-#            number = FONT.render(str(self.val), True, RED)
-#            screen.blit(number, (self.x * self.cell_size + self.left + self.edge + (self.cell_size // 2 - FX // 2),
-#                                 self.y * self.cell_size + self.top + self.edge + (self.cell_size // 2 - FY // 2)))
 
 if __name__ == "__main__":
     pygame.init()
@@ -170,8 +133,7 @@ if __name__ == "__main__":
     corner = False
     board = Board(size, cell_size, left, top, edge, corner)
     rule.add_figures(board)
-    put_on_cell(board, rule)
-
+    board.board = rule.board
     running = True
 
     while running:
@@ -182,20 +144,15 @@ if __name__ == "__main__":
                 pos = event.dict['pos']
                 x, y = pos
                 x1, y1 = board.get_cell(x, y)
-                print(1, x1, y1)
-                if 0 < x1 < size or 0 < y1 < size:
-                    if board.board[y1][x1].cont != 0:
-                        board.board[y1][x1].cont.grabbed = True
+                if 0 < x1 < size and 0 < y1 < size:
+                    board.board[y1][x1].grabbed = True
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = event.dict['pos']
                 x, y = pos
                 x2, y2 = board.get_cell(x, y)
-                print(2, x2, y2)
-                if board.board[y1][x1].cont != 0:
-                    board.board[y1][x1].cont.grabbed = False
-                    if 0 < x2 < size or 0 < y2 < size:
-                        board.board[y1][x1].move((x2, y2))
-
+                board.board[y1][x1].grabbed = False
+                if 0 < x2 < size and 0 < y2 < size:
+                    board.board[y1][x1].move((x2, y2))
         screen.fill((0, 0, 0))
         board.render(screen)
         pygame.display.flip()
