@@ -1,10 +1,10 @@
 import os
 import sys
-from random import randint
 import string
 import pygame
 import Figures
 import Rule
+
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -33,12 +33,19 @@ def load_image(name, colorkey=None):
 
 
 class Board:
-    def __init__(self, x, cell_size, left, top, edge, corner=True):
+    def __init__(self, x, cell_size, left, top, edge, max_time, corner=True):
         self.edge = edge
         self.size = x
         self.cell_size = cell_size
         self.left = left
         self.top = top
+        self.tw = max_time
+        self.tb = max_time
+        self.mw = 1
+        self.mb = 1
+        self.cw = 0
+        self.cb = 0
+        self.move = 'w'
         self.board = [[Figures.Empty(self, (x1, y1)) for x1 in range(x)] for y1 in range(x)]
         self.corner = corner
 
@@ -82,6 +89,7 @@ class Board:
             screen.blit(number, (i * self.cell_size + self.left + self.edge + (self.cell_size // 2 - FX // 2),
                                  self.top + (self.edge // 2 - FY // 2)))
 
+
         # это рендер клеток
         for x in range(self.size):
             for y in range(self.size):
@@ -100,25 +108,40 @@ class Board:
 
                 self.render_figures(screen, (x, y))
         self.render_player_action(screen)
+        #рендер времени
+        t = str(self.tw // 60) + ":" + str(self.tw % 60)
+        number = FONT.render(t, True, WHITE)
+        screen.blit(number, (self.size * self.cell_size + (self.edge + self.left) * 2, self.top + self.edge,
+                             100, 100))
+
+        t = str(self.tb // 60) + ":" + str(self.tb % 60)
+        number = FONT.render(t, True, WHITE)
+        screen.blit(number, (840, 700, 100, 100))
+
+        #рендер счёта
 
     def get_cell(self, x, y):
         x = (x - self.left - self.edge) // self.cell_size
         y = (y - self.top - self.edge) // self.cell_size
         return x, y
 
-    def update(self):
-        counter = 0
+    def counter(self):
+        w = 0
+        b = 0
         for y in range(self.size):
             for x in range(self.size):
-                if board[y][x].val != 0:
-                    counter += 1
-        new = randint(0, counter)
+                if self.board[y][x].col == 'w':
+                    w += 1
+                elif self.board[y][x].col == 'b':
+                    b += 1
+        return w, b
 
 
 if __name__ == "__main__":
     pygame.init()
     FONT = pygame.font.Font(None, 60)
     FX, FY = FONT.render("1", True, WHITE).get_size()
+    INF_SIZE = 100
     game = 'normal'
     if game == 'normal':
         rule = Rule.Classic_Rule()
@@ -127,16 +150,27 @@ if __name__ == "__main__":
     cell_size = rule.cell_size
     left = rule.left
     top = rule.top
+    max_time = rule.max_time
     edge = max(FX, FY)
-    screen = pygame.display.set_mode((size * cell_size + (left + edge) * 2,
+    screen = pygame.display.set_mode((size * cell_size + (left + edge) * 2 + INF_SIZE,
                                       size * cell_size + (top + edge) * 2,))
     corner = False
-    board = Board(size, cell_size, left, top, edge, corner)
+    board = Board(size, cell_size, left, top, edge, max_time, corner)
     rule.add_figures(board)
     board.board = rule.board
-    running = True
 
+    fps = 60
+    clock = pygame.time.Clock()
+    running = True
+    frame = 0
     while running:
+        frame += 1
+        if frame == 60:
+            frame = 0
+            if board.move == 'w':
+                board.tw -= 1
+            else:
+                board.tb -= 1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -144,15 +178,17 @@ if __name__ == "__main__":
                 pos = event.dict['pos']
                 x, y = pos
                 x1, y1 = board.get_cell(x, y)
-                if 0 < x1 < size and 0 < y1 < size:
+                if 0 <= x1 < size and 0 <= y1 < size:
                     board.board[y1][x1].grabbed = True
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = event.dict['pos']
                 x, y = pos
                 x2, y2 = board.get_cell(x, y)
-                board.board[y1][x1].grabbed = False
-                if 0 < x2 < size and 0 < y2 < size:
+                if 0 <= x1 < size and 0 <= y1 < size:
+                    board.board[y1][x1].grabbed = False
+                if 0 <= x2 < size and 0 <= y2 < size:
                     board.board[y1][x1].move((x2, y2))
         screen.fill((0, 0, 0))
         board.render(screen)
+        clock.tick(fps)
         pygame.display.flip()

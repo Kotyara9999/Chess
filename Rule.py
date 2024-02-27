@@ -8,6 +8,8 @@ class Classic_Rule():
         self.cell_size = 90
         self.left = 20
         self.top = 20
+        self.max_time = 5 * 60
+        self.mw
 
     def add_figures(self, board):
         self.board = [[Figures.Empty(board, (x, y)) for x in range(self.size)] for y in range(self.size)]

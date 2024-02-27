@@ -14,7 +14,7 @@ class Figure:
 
     def check_dest(self, pos2):
         x, y = pos2
-        if self.board.board[self.y][self.x].col == self.board.board[y][x].col:
+        if self.board.board[self.y][self.x].col == self.board.board[y][x].col or self.col != self.board.move:
             return False
         else:
             return True
@@ -23,6 +23,10 @@ class Figure:
         if self.can_move(pos2) and self.check_dest(pos2):
             board = self.board.board
             board[self.y][self.x], board[pos2[1]][pos2[0]] = Empty(self.board, pos2), board[self.y][self.x]
+            if self.col == 'w':
+                self.board.move = 'b'
+            else:
+                self.board.move = 'w'
             self.x = pos2[0]
             self.y = pos2[1]
             return True
@@ -42,10 +46,13 @@ class Pawn(Figure):
         x2, y2 = pos2
         x, y = self.x, self.y
         if (y == 1 or y == 6) and abs(y2 - y) == 2 and x2 - x == 0:
-            return True
+            if ((type(self.col == 'w' and self.board.board[y + 1][x]) == Empty)
+                    or (type(self.col == 'b' and self.board.board[y - 1][x]) == Empty)):
+                return True
         elif abs(y2 - y) == 1 and x2 - x == 0:
             return True
-        elif abs(x2 - x) == 1 and y2 - y == 1 and type(self.board.board[y2][x2]) != Empty:
+        elif (abs(x2 - x) == 1 and (y2 - y == 1 and self.col == 'w' or y2 - y == -1 and self.col == 'b')
+              and type(self.board.board[y2][x2]) != Empty):
             return True
         else:
             return False
@@ -56,8 +63,20 @@ class Rook(Figure):
         x2, y2 = pos2
         x, y = self.x, self.y
         if x2 == x or y2 == y:
-            return True
+            if x2 == x:
+                for y1 in range(min(y, y2) + 1, max(y, y2) + 1):
+                    if type(self.board.board[y1][x]) != Empty:
+                        if self.board.board[y1][x] == self:
+                            continue
+                        return False
+                return True
+            elif y2 == y:
+                for x1 in range(min(x, x2), max(x, x2)):
+                    if type(self.board.board[y][x1]) != Empty:
+                        return False
+                return True
         else:
+
             return False
 
 
@@ -75,7 +94,18 @@ class Bishop(Figure):
     def can_move(self, pos2):
         x2, y2 = pos2
         x, y = self.x, self.y
+        if x2 != x:
+            mx = abs(x2 - x) // (x2 - x)
+        else:
+            mx = 1
+        if y2 != y:
+            my = abs(y2 - y) // (y2 - y)
+        else:
+            my = 1
         if abs(x2 - x) == abs(y2 - y):
+            for i in range(1, abs(x2 - x)):
+                if type(self.board.board[y + i * my][x + i * mx]) != Empty:
+                    return False
             return True
         else:
             return False
@@ -86,7 +116,25 @@ class Queen(Figure):
         x2, y2 = pos2
         x, y = self.x, self.y
         if x2 == x or y2 == y or abs(x2 - x) == abs(y2 - y):
-            return True
+            if x2 == x:
+                for y1 in range(min(y, y2) + 1, max(y, y2) + 1):
+                    if type(self.board.board[y1][x]) != Empty:
+                        if self.board.board[y1][x] == self:
+                            continue
+                        return False
+                return True
+            elif y2 == y:
+                for x1 in range(min(x, x2), max(x, x2)):
+                    if type(self.board.board[y][x1]) != Empty:
+                        return False
+                return True
+            elif abs(x2 - x) == abs(y2 - y):
+                mx = abs(x2 - x) // (x2 - x)
+                my = abs(y2 - y) // (y2 - y)
+                for i in range(1, abs(x2 - x)):
+                    if type(self.board.board[y + i * my][x + i * mx]) != Empty:
+                        return False
+                return True
         else:
             return False
 
