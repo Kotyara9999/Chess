@@ -1,3 +1,6 @@
+import Rule
+
+
 class Figure:
     def __init__(self, board, pos, color='w'):
         self.x, self.y = pos
@@ -8,19 +11,27 @@ class Figure:
         elif color == 'b':
             self.image = f"{type(self).__name__}2.png"
         self.grabbed = False
+        if self.board.rule == 'clas' or self.board.rule == 'test' or self.board.rule == 'tes':
+            rule = Rule.Classic_Rule()
+        elif self.board.rule == 'tot':
+            rule = Rule.Total_War()
+        self.pawn_start = rule.pawn_start
 
     def can_move(self, pos2):
-        return False
+        return True
 
     def check_dest(self, pos2):
         x, y = pos2
-        if self.board.board[self.y][self.x].col == self.board.board[y][x].col or self.col != self.board.move:
+        if self.board.rule == 'test' or self.board.rule == 'tes':
+            return True
+        if (self.board.board[self.y][self.x].col == self.board.board[y][x].col or self.col != self.board.move
+                or self.board.mated and not type(self.board.board[self.y][self.x]) == King):
             return False
         else:
             return True
 
     def move(self, pos2):
-        if self.can_move(pos2) and self.check_dest(pos2):
+        if self.can_move(pos2) and self.check_dest(pos2) or self.board.rule == 'test':
             board = self.board.board
             board[self.y][self.x], board[pos2[1]][pos2[0]] = Empty(self.board, pos2), board[self.y][self.x]
             if self.col == 'w':
@@ -46,13 +57,16 @@ class Pawn(Figure):
         x2, y2 = pos2
         x, y = self.x, self.y
         if (y == 1 or y == 6) and abs(y2 - y) == 2 and x2 - x == 0:
-            if ((type(self.col == 'w' and self.board.board[y + 1][x]) == Empty)
-                    or (type(self.col == 'b' and self.board.board[y - 1][x]) == Empty)):
+            if ((self.col == 'w' and self.board.board[y + 1][x].col != self.col)
+                    or (self.col == 'b' and self.board.board[y - 1][x].col != self.col)):
                 return True
-        elif abs(y2 - y) == 1 and x2 - x == 0:
-            return True
+        elif (y2 - y == 1 and self.col == 'w' or y2 - y == -1 and self.col == 'b') and x2 - x == 0:
+            if self.board.board[y2][x2].col is None:
+                return True
+            else:
+                return False
         elif (abs(x2 - x) == 1 and (y2 - y == 1 and self.col == 'w' or y2 - y == -1 and self.col == 'b')
-              and type(self.board.board[y2][x2]) != Empty):
+              and self.board.board[y2][x2].col != self.col):
             return True
         else:
             return False
@@ -65,14 +79,14 @@ class Rook(Figure):
         if x2 == x or y2 == y:
             if x2 == x:
                 for y1 in range(min(y, y2) + 1, max(y, y2) + 1):
-                    if type(self.board.board[y1][x]) != Empty:
+                    if self.board.board[y1][x].col == self.col:
                         if self.board.board[y1][x] == self:
                             continue
                         return False
                 return True
             elif y2 == y:
                 for x1 in range(min(x, x2), max(x, x2)):
-                    if type(self.board.board[y][x1]) != Empty:
+                    if self.board.board[y][x1].col == self.col:
                         return False
                 return True
         else:
@@ -104,7 +118,7 @@ class Bishop(Figure):
             my = 1
         if abs(x2 - x) == abs(y2 - y):
             for i in range(1, abs(x2 - x)):
-                if type(self.board.board[y + i * my][x + i * mx]) != Empty:
+                if self.board.board[y + i * my][x + i * mx].col == self.col:
                     return False
             return True
         else:
@@ -118,14 +132,16 @@ class Queen(Figure):
         if x2 == x or y2 == y or abs(x2 - x) == abs(y2 - y):
             if x2 == x:
                 for y1 in range(min(y, y2) + 1, max(y, y2) + 1):
-                    if type(self.board.board[y1][x]) != Empty:
+                    if self.board.board[y1][x].col == self.col:
                         if self.board.board[y1][x] == self:
                             continue
                         return False
                 return True
             elif y2 == y:
-                for x1 in range(min(x, x2), max(x, x2)):
-                    if type(self.board.board[y][x1]) != Empty:
+                for x1 in range(min(x, x2) + 1, max(x, x2) + 1):
+                    if self.board.board[y][x1].col == self.col:
+                        if self.board.board[y][x1] == self:
+                            continue
                         return False
                 return True
             elif abs(x2 - x) == abs(y2 - y):
