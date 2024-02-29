@@ -1,3 +1,4 @@
+#это разработка будущего
 class PowerUp():
     def __init__(self, board, pos):
         self.board = board

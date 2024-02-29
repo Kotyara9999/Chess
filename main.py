@@ -42,11 +42,9 @@ class Start:
         screen.fill(WHITE)
 
         intro_text = ["Шахматы", "",
-                      "В этих шахматах есть три режима",
+                      "В этих шахматах есть два режима",
                       "Классический, Total War, Improved", "",
-                      "В режиме Total War, доска увеличивается и увеличивается количество фигур", "",
-                      "В Improved, иногда на поле будут появляться усиления,",
-                      "которые могут перевернуть игру"]
+                      "В режиме Total War, доска увеличивается и увеличивается количество фигур", ""]
 
         fon = pygame.transform.scale(load_image('fon.jpg'), (650, 650))
         screen.blit(fon, (300, 250))
@@ -73,9 +71,9 @@ class Start:
         pygame.draw.rect(screen, BLACK_CELL_COLOR, (30, 490, 131, 44))
         screen.blit(text, (40, 500))
 
-        text = "Improved"
+        text = "В разработке"
         text = font.render(text, True, BLACK)
-        pygame.draw.rect(screen, BLACK_CELL_COLOR, (30, 590, 128, 44))
+        pygame.draw.rect(screen, BLACK_CELL_COLOR, (30, 590, 180, 44))
         screen.blit(text, (40, 600))
 
     def start_screen(self):
