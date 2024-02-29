@@ -148,9 +148,14 @@ class Board:
                           self.cell_size * self.size + self.edge * 2), self.edge)
         # рендер букв и цифр
         for i in range(self.size):
+            global FY, FX
+            if i >= 10:
+                FX = FX + 20
             number = FONT.render(str(i), True, WHITE)
             screen.blit(number, (self.left + (self.edge // 2 - FX // 2),
                                  i * self.cell_size + self.top + self.edge + (self.cell_size // 2 - FY // 2)))
+            if i >= 10:
+                FX = FX - 20
 
         for i in range(self.size):
             number = FONT.render(ENGLISH[i], True, WHITE)
@@ -294,7 +299,7 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
     win1 = Start()
     win1.start_screen()
-    # MODE = 'tes'
+    # MODE = 'test'
     if MODE == 'clas' or MODE == 'test' or MODE == 'tes':
         rule = Rule.Classic_Rule()
     elif MODE == 'tot':

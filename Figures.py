@@ -24,13 +24,14 @@ class Figure:
         x, y = pos2
         if self.board.rule == 'test' or self.board.rule == 'tes':
             return True
-        if (self.board.board[self.y][self.x].col == self.board.board[y][x].col or self.col != self.board.move
+        if ((self.board.board[self.y][self.x].col == self.board.board[y][x].col or self.col != self.board.move)
                 or self.board.mated and not type(self.board.board[self.y][self.x]) == King):
             return False
         else:
             return True
 
     def move(self, pos2):
+        # print(self.can_move(pos2), self.check_dest(pos2))
         if self.can_move(pos2) and self.check_dest(pos2) or self.board.rule == 'test':
             board = self.board.board
             board[self.y][self.x], board[pos2[1]][pos2[0]] = Empty(self.board, pos2), board[self.y][self.x]
@@ -56,7 +57,8 @@ class Pawn(Figure):
     def can_move(self, pos2):
         x2, y2 = pos2
         x, y = self.x, self.y
-        if (y == 1 or y == 6) and abs(y2 - y) == 2 and x2 - x == 0:
+        sy1, sy2 = self.pawn_start[0], self.pawn_start[1]
+        if (y == sy1 or y == sy2) and abs(y2 - y) == 2 and x2 - x == 0:
             if ((self.col == 'w' and self.board.board[y + 1][x].col != self.col)
                     or (self.col == 'b' and self.board.board[y - 1][x].col != self.col)):
                 return True
@@ -82,15 +84,18 @@ class Rook(Figure):
                     if self.board.board[y1][x].col == self.col:
                         if self.board.board[y1][x] == self:
                             continue
+                        print(1)
                         return False
                 return True
             elif y2 == y:
                 for x1 in range(min(x, x2), max(x, x2)):
                     if self.board.board[y][x1].col == self.col:
+                        if self.board.board[y][x1] == self:
+                            continue
+
                         return False
                 return True
         else:
-
             return False
 
 
